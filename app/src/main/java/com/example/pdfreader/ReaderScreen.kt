@@ -43,6 +43,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Crop
+import androidx.compose.material.icons.filled.CropFree
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.LightMode
@@ -164,6 +166,8 @@ private fun ReaderContent(doc: PdfDoc, uri: Uri, prefs: Prefs, onClose: () -> Un
     val scope = rememberCoroutineScope()
     var fullscreen by rememberSaveable { mutableStateOf(false) }
     var nightMode by remember { mutableStateOf(prefs.nightMode) }
+    var crop by remember { mutableStateOf(prefs.crop(uri)) }
+    LaunchedEffect(crop) { if (crop) doc.prepareCrop() }
     var zoom by rememberSaveable { mutableFloatStateOf(1f) }
     var showGoTo by remember { mutableStateOf(false) }
     val listState = rememberLazyListState(
@@ -215,6 +219,7 @@ private fun ReaderContent(doc: PdfDoc, uri: Uri, prefs: Prefs, onClose: () -> Un
             onZoomChange = { zoom = it },
             onTap = { fullscreen = !fullscreen },
             nightMode = nightMode,
+            crop = crop,
             contentPadding = contentPadding,
         )
 
@@ -232,6 +237,15 @@ private fun ReaderContent(doc: PdfDoc, uri: Uri, prefs: Prefs, onClose: () -> Un
                     }
                 },
                 actions = {
+                    IconButton(onClick = {
+                        crop = !crop
+                        prefs.setCrop(uri, crop)
+                    }) {
+                        Icon(
+                            if (crop) Icons.Filled.CropFree else Icons.Filled.Crop,
+                            contentDescription = if (crop) "Показать поля" else "Обрезать поля",
+                        )
+                    }
                     IconButton(onClick = {
                         nightMode = !nightMode
                         prefs.nightMode = nightMode
@@ -365,6 +379,7 @@ private fun PdfPages(
     onZoomChange: (Float) -> Unit,
     onTap: () -> Unit,
     nightMode: Boolean,
+    crop: Boolean,
     contentPadding: PaddingValues,
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -459,7 +474,7 @@ private fun PdfPages(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     items(count = doc.pageCount, key = { it }) { index ->
-                        PdfPage(doc, index, pageWidthPx, nightMode)
+                        PdfPage(doc, index, pageWidthPx, nightMode, crop)
                     }
                 }
             }
@@ -468,19 +483,23 @@ private fun PdfPages(
 }
 
 @Composable
-private fun PdfPage(doc: PdfDoc, index: Int, widthPx: Int, nightMode: Boolean) {
+private fun PdfPage(doc: PdfDoc, index: Int, widthPx: Int, nightMode: Boolean, crop: Boolean) {
     // Округляем ширину рендера, чтобы не перерисовывать на каждое мелкое изменение зума.
     val renderWidth = (ceil(widthPx / 256f).toInt() * 256).coerceIn(256, MAX_RENDER_WIDTH)
-    var bitmap by remember(index) { mutableStateOf<ImageBitmap?>(doc.peek(index, renderWidth)?.asImageBitmap()) }
+    // Меняется, когда уточняется область обрезки, — тогда страницу нужно перерисовать.
+    val cropKey = doc.cropKey(index, crop)
+    var bitmap by remember(index, cropKey) {
+        mutableStateOf<ImageBitmap?>(doc.peek(index, renderWidth, crop)?.asImageBitmap())
+    }
 
-    LaunchedEffect(index, renderWidth) {
-        doc.render(index, renderWidth)?.let { bitmap = it.asImageBitmap() }
+    LaunchedEffect(index, renderWidth, cropKey) {
+        doc.render(index, renderWidth, crop)?.let { bitmap = it.asImageBitmap() }
     }
 
     Box(
         Modifier
             .fillMaxWidth()
-            .aspectRatio(1f / doc.aspect(index))
+            .aspectRatio(1f / doc.displayAspect(index, crop))
             .background(if (nightMode) Color.Black else Color.White)
     ) {
         bitmap?.let {

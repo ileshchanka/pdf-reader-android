@@ -34,13 +34,18 @@ class Prefs(context: Context) {
         val list = listOf(file) + recentFiles().filter { it.uri != file.uri }
         val dropped = list.drop(MAX_RECENT)
         saveRecent(list.take(MAX_RECENT))
-        sp.edit { dropped.forEach { remove(pageKey(it.uri)) } }
+        sp.edit { dropped.forEach { remove(pageKey(it.uri)); remove(cropKey(it.uri)) } }
     }
 
     fun removeRecent(uri: Uri) {
         saveRecent(recentFiles().filter { it.uri != uri })
-        sp.edit { remove(pageKey(uri)) }
+        sp.edit { remove(pageKey(uri)); remove(cropKey(uri)) }
     }
+
+    /** Обрезка полей включается отдельно для каждого файла. */
+    fun crop(uri: Uri): Boolean = sp.getBoolean(cropKey(uri), false)
+
+    fun setCrop(uri: Uri, enabled: Boolean) = sp.edit { putBoolean(cropKey(uri), enabled) }
 
     var nightMode: Boolean
         get() = sp.getBoolean("night_mode", false)
@@ -63,6 +68,8 @@ class Prefs(context: Context) {
     }
 
     private fun pageKey(uri: Uri) = "page:$uri"
+
+    private fun cropKey(uri: Uri) = "crop:$uri"
 
     private companion object {
         const val KEY_RECENT = "recent_files"
