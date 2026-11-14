@@ -1,0 +1,18 @@
+<resources>
+    <string name="home_hint">ページをタップで全画面表示</string>
+    <string name="open_pdf">PDFを開く</string>
+    <string name="recent">最近のファイル</string>
+    <string name="recent_progress">%1$d / %2$d ページ</string>
+    <string name="recent_progress_unknown">%1$d ページ</string>
+    <string name="remove_from_recent">リストから削除</string>
+    <string name="back">戻る</string>
+    <string name="crop_margins">余白をトリミング</string>
+    <string name="show_margins">余白を表示</string>
+    <string name="night_mode">ナイトモード</string>
+    <string name="page_description">%1$d ページ</string>
+    <string name="go_to_page_title">ページへ移動</string>
+    <string name="go_to_page_confirm">移動</string>
+    <string name="cancel">キャンセル</string>
+    <string name="error_protected">ファイルがパスワードで保護されているか、アクセスできません</string>
+    <string name="error_open">ファイルを開けませんでした</string>
+</resources>

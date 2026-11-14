@@ -1,0 +1,18 @@
+<resources>
+    <string name="home_hint">Tam ekran için sayfaya dokunun</string>
+    <string name="open_pdf">PDF aç</string>
+    <string name="recent">Son açılanlar</string>
+    <string name="recent_progress">Sayfa %1$d / %2$d</string>
+    <string name="recent_progress_unknown">Sayfa %1$d</string>
+    <string name="remove_from_recent">Listeden kaldır</string>
+    <string name="back">Geri</string>
+    <string name="crop_margins">Kenar boşluklarını kırp</string>
+    <string name="show_margins">Kenar boşluklarını göster</string>
+    <string name="night_mode">Gece modu</string>
+    <string name="page_description">Sayfa %1$d</string>
+    <string name="go_to_page_title">Sayfaya git</string>
+    <string name="go_to_page_confirm">Git</string>
+    <string name="cancel">İptal</string>
+    <string name="error_protected">Dosya parola korumalı veya erişilemiyor</string>
+    <string name="error_open">Dosya açılamadı</string>
+</resources>

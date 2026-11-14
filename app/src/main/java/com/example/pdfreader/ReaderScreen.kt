@@ -14,9 +14,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculateCentroid
+import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,17 +27,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsIgnoringVisibility
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -46,7 +43,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Crop
 import androidx.compose.material.icons.filled.CropFree
 import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -64,6 +60,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -74,17 +72,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -95,6 +91,13 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.gestures.rememberScrollableState
+import androidx.compose.foundation.gestures.Orientation
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -108,6 +111,7 @@ private const val MIN_ZOOM = 1f
 private const val MAX_ZOOM = 5f
 private const val DOUBLE_TAP_ZOOM = 2.5f
 private const val MAX_RENDER_WIDTH = 2048
+private val PAGE_SPACING = 8.dp
 
 private val PanelColor = Color(0xE6202020)
 private val ReaderBackground = Color(0xFF303030)
@@ -136,9 +140,9 @@ fun ReaderScreen(uri: Uri, prefs: Prefs, onClose: () -> Unit, onError: (String) 
         } catch (e: CancellationException) {
             throw e
         } catch (e: SecurityException) {
-            onError("Файл защищён паролем или нет доступа к нему")
+            onError(context.getString(R.string.error_protected))
         } catch (e: Exception) {
-            onError("Не удалось открыть файл")
+            onError(context.getString(R.string.error_open))
         }
     }
     DisposableEffect(doc) {
@@ -233,7 +237,7 @@ private fun ReaderContent(doc: PdfDoc, uri: Uri, prefs: Prefs, onClose: () -> Un
                 title = { Text(doc.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = {
                     IconButton(onClick = onClose) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
@@ -243,7 +247,7 @@ private fun ReaderContent(doc: PdfDoc, uri: Uri, prefs: Prefs, onClose: () -> Un
                     }) {
                         Icon(
                             if (crop) Icons.Filled.CropFree else Icons.Filled.Crop,
-                            contentDescription = if (crop) "Показать поля" else "Обрезать поля",
+                            contentDescription = stringResource(if (crop) R.string.show_margins else R.string.crop_margins),
                         )
                     }
                     IconButton(onClick = {
@@ -252,11 +256,8 @@ private fun ReaderContent(doc: PdfDoc, uri: Uri, prefs: Prefs, onClose: () -> Un
                     }) {
                         Icon(
                             if (nightMode) Icons.Filled.LightMode else Icons.Filled.DarkMode,
-                            contentDescription = "Ночной режим",
+                            contentDescription = stringResource(R.string.night_mode),
                         )
-                    }
-                    IconButton(onClick = { fullscreen = true }) {
-                        Icon(Icons.Filled.Fullscreen, contentDescription = "Во весь экран")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = PanelColor),
@@ -367,8 +368,8 @@ private fun BottomPanel(page: Int, pageCount: Int, onPageClick: () -> Unit, onSe
 /**
  * Список страниц с зумом.
  * Зум реально меняет ширину страниц (а не просто растягивает картинку), поэтому текст
- * перерисовывается в нужном разрешении, а прокрутка работает в обе стороны «родными» средствами.
- * Во время щипка показываем быстрый graphicsLayer-масштаб, а по отпусканию применяем зум к раскладке.
+ * перерисовывается в нужном разрешении. Во время щипка зум применяется к раскладке каждый кадр
+ * (при отдалении сразу видны соседние страницы), а битмапы перерисовываются после отпускания.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -385,32 +386,65 @@ private fun PdfPages(
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val viewportWidth = constraints.maxWidth
         val density = LocalDensity.current
-        val scope = rememberCoroutineScope()
-        val hScroll = rememberScrollState()
-        var pinchScale by remember { mutableFloatStateOf(1f) }
-        var pinchOrigin by remember { mutableStateOf(Offset.Zero) }
+        val spacingPx = with(density) { PAGE_SPACING.toPx() }
+        val padTopPx = with(density) { contentPadding.calculateTopPadding().toPx() }
 
-        val commitZoom: (Float, Offset) -> Unit = { requested, focus ->
-            val newZoom = requested.coerceIn(MIN_ZOOM, MAX_ZOOM)
-            val ratio = newZoom / zoom
-            if (ratio != 1f) {
-                // Сохраняем под пальцем ту же точку документа.
-                val newScrollX = ((hScroll.value + focus.x) * ratio - focus.x).roundToInt()
-                val index = listState.firstVisibleItemIndex
-                val offset = listState.firstVisibleItemScrollOffset
-                val newOffset = ((offset + focus.y) * ratio - focus.y).roundToInt().coerceAtLeast(0)
-                onZoomChange(newZoom)
-                scope.launch {
-                    withFrameNanos { }
-                    withFrameNanos { } // ждём перераскладку с новой шириной
-                    hScroll.scrollTo(newScrollX)
-                    listState.scrollToItem(index, newOffset)
-                }
-            }
+        // Горизонтальная прокрутка своя (а не horizontalScroll): её позицию можно выставить
+        // в том же кадре, что и новый зум, — до того как раскладка узнает новую ширину.
+        var offsetX by remember { mutableFloatStateOf(0f) }
+        val currentMaxOffsetX by rememberUpdatedState(viewportWidth * (zoom - 1f))
+        val hScrollState = rememberScrollableState { delta ->
+            val old = offsetX
+            offsetX = (old - delta).coerceIn(0f, currentMaxOffsetX)
+            old - offsetX
         }
-        val currentZoom by rememberUpdatedState(zoom)
-        val currentCommit by rememberUpdatedState(commitZoom)
+
+        // Последний применённый зум: за один кадр может прийти несколько событий,
+        // а параметр zoom обновится только после рекомпозиции.
+        val liveZoom = remember { floatArrayOf(zoom) }
+        SideEffect { liveZoom[0] = zoom }
+
+        // Во время щипка страницы не перерисовываются, а растягиваются из готовых битмапов.
+        var pinching by remember { mutableStateOf(false) }
+        var frozenRenderWidth by remember { mutableIntStateOf(0) }
+
+        /**
+         * Применяет новый зум к раскладке так, чтобы точка документа, бывшая в [origin],
+         * оказалась в origin + [pan]. Зум и обе позиции прокрутки меняются разом и попадают
+         * в один кадр — поэтому картинка не дёргается.
+         */
+        val applyZoom: (Float, Offset, Offset) -> Unit = { requested, origin, pan ->
+            val oldZoom = liveZoom[0]
+            val newZoom = requested.coerceIn(MIN_ZOOM, MAX_ZOOM)
+            val ratio = newZoom / oldZoom
+            val newWidth = viewportWidth * newZoom
+
+            offsetX = ((offsetX + origin.x) * ratio - origin.x - pan.x)
+                .coerceIn(0f, viewportWidth * (newZoom - 1f))
+
+            // Опорная страница — та, что под пальцами; высоты страниц при новом зуме известны точно.
+            val items = listState.layoutInfo.visibleItemsInfo
+            val anchor = items.firstOrNull { origin.y < it.offset + padTopPx + it.size + spacingPx }
+                ?: items.lastOrNull()
+            if (anchor != null) {
+                val withinItem = origin.y - (anchor.offset + padTopPx)
+                var index = anchor.index
+                var top = origin.y + pan.y - withinItem * ratio // где должен оказаться верх опорной страницы
+                while (top > padTopPx && index > 0) {
+                    index--
+                    top -= newWidth * doc.displayAspect(index, crop) + spacingPx
+                }
+                listState.requestScrollToItem(index, (padTopPx - top).roundToInt().coerceAtLeast(0))
+            }
+
+            liveZoom[0] = newZoom
+            onZoomChange(newZoom)
+        }
+        val currentApplyZoom by rememberUpdatedState(applyZoom)
         val currentOnTap by rememberUpdatedState(onTap)
+
+        val pageWidthPx = (viewportWidth * zoom).roundToInt()
+        val renderWidthPx = if (pinching) frozenRenderWidth else pageWidthPx
 
         Box(
             Modifier
@@ -419,63 +453,60 @@ private fun PdfPages(
                 .pointerInput(Unit) {
                     awaitEachGesture {
                         awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-                        var pinching = false
-                        var accumulated = 1f
+                        var started = false
                         do {
                             val event = awaitPointerEvent(PointerEventPass.Initial)
-                            val pressed = event.changes.count { it.pressed }
-                            if (pressed >= 2) {
-                                pinching = true
-                                accumulated *= event.calculateZoom()
-                                pinchScale = accumulated.coerceIn(MIN_ZOOM / currentZoom, MAX_ZOOM / currentZoom)
-                                pinchOrigin = event.calculateCentroid(useCurrent = true)
+                            if (event.changes.count { it.pressed } >= 2) {
+                                if (!started) {
+                                    started = true
+                                    frozenRenderWidth = (viewportWidth * liveZoom[0]).roundToInt()
+                                    pinching = true
+                                }
+                                // Все три функции учитывают только пальцы, лежавшие и в прошлом кадре,
+                                // поэтому появление/подъём пальца не даёт скачка.
+                                val frameZoom = event.calculateZoom()
+                                val pan = event.calculatePan()
+                                if (frameZoom != 1f || pan != Offset.Zero) {
+                                    val origin = event.calculateCentroid(useCurrent = false)
+                                    if (origin.isSpecified) currentApplyZoom(liveZoom[0] * frameZoom, origin, pan)
+                                }
                                 event.changes.forEach { it.consume() }
-                            } else if (pinching) {
+                            } else if (started) {
                                 event.changes.forEach { it.consume() }
                             }
                         } while (event.changes.any { it.pressed })
-                        if (pinching) {
-                            currentCommit(currentZoom * pinchScale, pinchOrigin)
-                            pinchScale = 1f
-                        }
+                        pinching = false
                     }
                 }
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onTap = { currentOnTap() },
                         onDoubleTap = { pos ->
-                            currentCommit(if (currentZoom > 1.05f) 1f else DOUBLE_TAP_ZOOM, pos)
+                            currentApplyZoom(if (liveZoom[0] > 1.05f) 1f else DOUBLE_TAP_ZOOM, pos, Offset.Zero)
                         },
                     )
                 }
         ) {
-            Box(
-                Modifier
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
                     .fillMaxSize()
-                    .graphicsLayer {
-                        scaleX = pinchScale
-                        scaleY = pinchScale
-                        if (size.width > 0f && size.height > 0f) {
-                            transformOrigin = TransformOrigin(
-                                pinchOrigin.x / size.width,
-                                pinchOrigin.y / size.height,
-                            )
+                    .scrollable(hScrollState, Orientation.Horizontal, enabled = zoom > 1f)
+                    .clipToBounds()
+                    // Список шире экрана в zoom раз; сдвигаем его на offsetX (читается только при размещении).
+                    .layout { measurable, constraints ->
+                        val placeable = measurable.measure(
+                            Constraints.fixed(pageWidthPx, constraints.maxHeight)
+                        )
+                        layout(constraints.maxWidth, constraints.maxHeight) {
+                            placeable.place(-offsetX.roundToInt(), 0)
                         }
-                    }
-                    .horizontalScroll(hScroll, enabled = zoom > 1f)
+                    },
+                contentPadding = contentPadding,
+                verticalArrangement = Arrangement.spacedBy(PAGE_SPACING),
             ) {
-                val pageWidthPx = (viewportWidth * zoom).roundToInt()
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier
-                        .width(with(density) { pageWidthPx.toDp() })
-                        .fillMaxHeight(),
-                    contentPadding = contentPadding,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    items(count = doc.pageCount, key = { it }) { index ->
-                        PdfPage(doc, index, pageWidthPx, nightMode, crop)
-                    }
+                items(count = doc.pageCount, key = { it }) { index ->
+                    PdfPage(doc, index, renderWidthPx, nightMode, crop)
                 }
             }
         }
@@ -505,7 +536,7 @@ private fun PdfPage(doc: PdfDoc, index: Int, widthPx: Int, nightMode: Boolean, c
         bitmap?.let {
             Image(
                 bitmap = it,
-                contentDescription = "Страница ${index + 1}",
+                contentDescription = stringResource(R.string.page_description, index + 1),
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.FillBounds,
                 colorFilter = if (nightMode) InvertFilter else null,
@@ -523,7 +554,7 @@ private fun GoToPageDialog(pageCount: Int, onDismiss: () -> Unit, onGo: (Int) ->
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Перейти к странице") },
+        title = { Text(stringResource(R.string.go_to_page_title)) },
         text = {
             OutlinedTextField(
                 value = text,
@@ -534,7 +565,7 @@ private fun GoToPageDialog(pageCount: Int, onDismiss: () -> Unit, onGo: (Int) ->
                 keyboardActions = KeyboardActions(onGo = { go() }),
             )
         },
-        confirmButton = { TextButton(onClick = go, enabled = valid) { Text("Перейти") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } },
+        confirmButton = { TextButton(onClick = go, enabled = valid) { Text(stringResource(R.string.go_to_page_confirm)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }

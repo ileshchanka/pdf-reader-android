@@ -1,0 +1,18 @@
+<resources>
+    <string name="home_hint">点按页面切换全屏</string>
+    <string name="open_pdf">打开 PDF</string>
+    <string name="recent">最近</string>
+    <string name="recent_progress">第 %1$d 页，共 %2$d 页</string>
+    <string name="recent_progress_unknown">第 %1$d 页</string>
+    <string name="remove_from_recent">从列表中移除</string>
+    <string name="back">返回</string>
+    <string name="crop_margins">裁剪页边距</string>
+    <string name="show_margins">显示页边距</string>
+    <string name="night_mode">夜间模式</string>
+    <string name="page_description">第 %1$d 页</string>
+    <string name="go_to_page_title">跳转到页面</string>
+    <string name="go_to_page_confirm">跳转</string>
+    <string name="cancel">取消</string>
+    <string name="error_protected">文件受密码保护或无法访问</string>
+    <string name="error_open">无法打开文件</string>
+</resources>

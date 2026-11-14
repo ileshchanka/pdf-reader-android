@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 
 /** Недавний файл вместе с сохранённой страницей (0-based). */
 data class RecentEntry(val file: RecentFile, val page: Int)
@@ -76,7 +77,7 @@ fun HomeScreen(
                 }
                 item {
                     Text(
-                        "Недавние",
+                        stringResource(R.string.recent),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
@@ -107,10 +108,10 @@ private fun Header(onOpen: () -> Unit) {
         tint = MaterialTheme.colorScheme.primary,
     )
     Spacer(Modifier.height(16.dp))
-    Text("PDF Reader", style = MaterialTheme.typography.headlineMedium)
+    Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium)
     Spacer(Modifier.height(8.dp))
     Text(
-        "Тап по странице — полноэкранный режим",
+        stringResource(R.string.home_hint),
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,
@@ -119,14 +120,15 @@ private fun Header(onOpen: () -> Unit) {
     Button(onClick = onOpen, modifier = Modifier.widthIn(max = 360.dp).fillMaxWidth().height(56.dp)) {
         Icon(Icons.Filled.FolderOpen, contentDescription = null)
         Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-        Text("Открыть PDF")
+        Text(stringResource(R.string.open_pdf))
     }
 }
 
 @Composable
 private fun RecentRow(entry: RecentEntry, onClick: () -> Unit, onRemove: () -> Unit, modifier: Modifier = Modifier) {
     val pageCount = entry.file.pageCount
-    val progress = if (pageCount > 0) "Стр. ${entry.page + 1} из $pageCount" else "Стр. ${entry.page + 1}"
+    val progress = if (pageCount > 0) stringResource(R.string.recent_progress, entry.page + 1, pageCount)
+    else stringResource(R.string.recent_progress_unknown, entry.page + 1)
     ListItem(
         modifier = modifier.fillMaxWidth().clickable(onClick = onClick),
         leadingContent = {
@@ -138,7 +140,7 @@ private fun RecentRow(entry: RecentEntry, onClick: () -> Unit, onRemove: () -> U
         supportingContent = { Text(progress) },
         trailingContent = {
             IconButton(onClick = onRemove) {
-                Icon(Icons.Filled.Close, contentDescription = "Убрать из списка")
+                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.remove_from_recent))
             }
         },
     )

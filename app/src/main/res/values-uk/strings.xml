@@ -1,0 +1,18 @@
+<resources>
+    <string name="home_hint">Торкніться сторінки — повноекранний режим</string>
+    <string name="open_pdf">Відкрити PDF</string>
+    <string name="recent">Нещодавні</string>
+    <string name="recent_progress">Стор. %1$d з %2$d</string>
+    <string name="recent_progress_unknown">Стор. %1$d</string>
+    <string name="remove_from_recent">Прибрати зі списку</string>
+    <string name="back">Назад</string>
+    <string name="crop_margins">Обрізати поля</string>
+    <string name="show_margins">Показати поля</string>
+    <string name="night_mode">Нічний режим</string>
+    <string name="page_description">Сторінка %1$d</string>
+    <string name="go_to_page_title">Перейти до сторінки</string>
+    <string name="go_to_page_confirm">Перейти</string>
+    <string name="cancel">Скасувати</string>
+    <string name="error_protected">Файл захищено паролем або немає доступу до нього</string>
+    <string name="error_open">Не вдалося відкрити файл</string>
+</resources>

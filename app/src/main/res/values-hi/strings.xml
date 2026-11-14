@@ -1,0 +1,18 @@
+<resources>
+    <string name="home_hint">फ़ुल स्क्रीन के लिए पेज पर टैप करें</string>
+    <string name="open_pdf">PDF खोलें</string>
+    <string name="recent">हाल की फ़ाइलें</string>
+    <string name="recent_progress">पेज %1$d / %2$d</string>
+    <string name="recent_progress_unknown">पेज %1$d</string>
+    <string name="remove_from_recent">सूची से हटाएं</string>
+    <string name="back">वापस</string>
+    <string name="crop_margins">हाशिये काटें</string>
+    <string name="show_margins">हाशिये दिखाएं</string>
+    <string name="night_mode">नाइट मोड</string>
+    <string name="page_description">पेज %1$d</string>
+    <string name="go_to_page_title">पेज पर जाएं</string>
+    <string name="go_to_page_confirm">जाएं</string>
+    <string name="cancel">रद्द करें</string>
+    <string name="error_protected">फ़ाइल पासवर्ड से सुरक्षित है या उस तक पहुंच नहीं है</string>
+    <string name="error_open">फ़ाइल नहीं खुल सकी</string>
+</resources>

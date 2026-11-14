@@ -239,7 +239,7 @@ class PdfDoc private constructor(
 
         suspend fun open(context: Context, uri: Uri): PdfDoc = withContext(Dispatchers.IO) {
             val pfd = context.contentResolver.openFileDescriptor(uri, "r")
-                ?: throw IOException("Не удалось открыть $uri")
+                ?: throw IOException("Cannot open $uri")
             val renderer = try {
                 PdfRenderer(pfd)
             } catch (e: Throwable) {
@@ -248,7 +248,7 @@ class PdfDoc private constructor(
             }
             try {
                 val count = renderer.pageCount
-                if (count == 0) throw IOException("Пустой документ")
+                if (count == 0) throw IOException("Empty document")
                 val widths = IntArray(count)
                 val heights = IntArray(count)
                 for (i in 0 until count) {

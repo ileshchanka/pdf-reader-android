@@ -1,0 +1,25 @@
+<resources>
+    <!-- Главный экран -->
+    <string name="home_hint">Тап по странице — полноэкранный режим</string>
+    <string name="open_pdf">Открыть PDF</string>
+    <string name="recent">Недавние</string>
+    <string name="recent_progress">Стр. %1$d из %2$d</string>
+    <string name="recent_progress_unknown">Стр. %1$d</string>
+    <string name="remove_from_recent">Убрать из списка</string>
+
+    <!-- Ридер -->
+    <string name="back">Назад</string>
+    <string name="crop_margins">Обрезать поля</string>
+    <string name="show_margins">Показать поля</string>
+    <string name="night_mode">Ночной режим</string>
+    <string name="page_description">Страница %1$d</string>
+
+    <!-- Переход к странице -->
+    <string name="go_to_page_title">Перейти к странице</string>
+    <string name="go_to_page_confirm">Перейти</string>
+    <string name="cancel">Отмена</string>
+
+    <!-- Ошибки -->
+    <string name="error_protected">Файл защищён паролем или нет доступа к нему</string>
+    <string name="error_open">Не удалось открыть файл</string>
+</resources>

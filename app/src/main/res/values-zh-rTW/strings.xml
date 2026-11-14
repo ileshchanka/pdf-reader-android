@@ -1,0 +1,18 @@
+<resources>
+    <string name="home_hint">點一下頁面切換全螢幕</string>
+    <string name="open_pdf">開啟 PDF</string>
+    <string name="recent">最近</string>
+    <string name="recent_progress">第 %1$d 頁，共 %2$d 頁</string>
+    <string name="recent_progress_unknown">第 %1$d 頁</string>
+    <string name="remove_from_recent">從清單中移除</string>
+    <string name="back">返回</string>
+    <string name="crop_margins">裁剪頁邊</string>
+    <string name="show_margins">顯示頁邊</string>
+    <string name="night_mode">夜間模式</string>
+    <string name="page_description">第 %1$d 頁</string>
+    <string name="go_to_page_title">前往頁面</string>
+    <string name="go_to_page_confirm">前往</string>
+    <string name="cancel">取消</string>
+    <string name="error_protected">檔案受密碼保護或無法存取</string>
+    <string name="error_open">無法開啟檔案</string>
+</resources>

@@ -1,0 +1,18 @@
+<resources>
+    <string name="home_hint">Touchez une page pour passer en plein écran</string>
+    <string name="open_pdf">Ouvrir un PDF</string>
+    <string name="recent">Récents</string>
+    <string name="recent_progress">Page %1$d sur %2$d</string>
+    <string name="recent_progress_unknown">Page %1$d</string>
+    <string name="remove_from_recent">Retirer de la liste</string>
+    <string name="back">Retour</string>
+    <string name="crop_margins">Rogner les marges</string>
+    <string name="show_margins">Afficher les marges</string>
+    <string name="night_mode">Mode nuit</string>
+    <string name="page_description">Page %1$d</string>
+    <string name="go_to_page_title">Aller à la page</string>
+    <string name="go_to_page_confirm">OK</string>
+    <string name="cancel">Annuler</string>
+    <string name="error_protected">Le fichier est protégé par un mot de passe ou inaccessible</string>
+    <string name="error_open">Impossible d\'ouvrir le fichier</string>
+</resources>

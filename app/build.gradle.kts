@@ -14,6 +14,11 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
+        // Только языки, на которые переведён интерфейс (переводы библиотек на другие языки отбрасываются).
+        resourceConfigurations += listOf(
+            "en", "ru", "es", "pt", "fr", "de", "it", "pl", "uk", "tr",
+            "ar", "hi", "in", "ja", "ko", "zh-rCN", "zh-rTW",
+        )
     }
 
     buildTypes {
@@ -38,6 +43,10 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+    androidResources {
+        // Список языков для выбора языка приложения в настройках Android 13+.
+        generateLocaleConfig = true
     }
 }
 

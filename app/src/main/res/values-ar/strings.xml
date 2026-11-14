@@ -1,0 +1,18 @@
+<resources>
+    <string name="home_hint">انقر على الصفحة لملء الشاشة</string>
+    <string name="open_pdf">فتح ملف PDF</string>
+    <string name="recent">الملفات الأخيرة</string>
+    <string name="recent_progress">الصفحة %1$d من %2$d</string>
+    <string name="recent_progress_unknown">الصفحة %1$d</string>
+    <string name="remove_from_recent">إزالة من القائمة</string>
+    <string name="back">رجوع</string>
+    <string name="crop_margins">قص الهوامش</string>
+    <string name="show_margins">إظهار الهوامش</string>
+    <string name="night_mode">الوضع الليلي</string>
+    <string name="page_description">الصفحة %1$d</string>
+    <string name="go_to_page_title">الانتقال إلى صفحة</string>
+    <string name="go_to_page_confirm">انتقال</string>
+    <string name="cancel">إلغاء</string>
+    <string name="error_protected">الملف محمي بكلمة مرور أو يتعذر الوصول إليه</string>
+    <string name="error_open">تعذر فتح الملف</string>
+</resources>
