@@ -87,12 +87,17 @@ private fun App(incomingUri: Uri?, onIncomingConsumed: () -> Unit) {
 
     val uri = openUri
     if (uri == null) {
-        val last = remember(openUri) { prefs.lastFile() }
+        var recent by remember { mutableStateOf(loadRecent(prefs)) }
         HomeScreen(
-            lastFile = last,
+            recent = recent,
             snackbar = snackbar,
             onOpen = { picker.launch(arrayOf("application/pdf")) },
-            onContinue = { openUri = it.uri },
+            onOpenRecent = { openUri = it.uri },
+            onRemoveRecent = { file ->
+                prefs.removeRecent(file.uri)
+                context.releaseReadPermission(file.uri)
+                recent = loadRecent(prefs)
+            },
         )
     } else {
         ReaderScreen(
@@ -100,12 +105,21 @@ private fun App(incomingUri: Uri?, onIncomingConsumed: () -> Unit) {
             prefs = prefs,
             onClose = { openUri = null },
             onError = { message ->
-                if (prefs.lastFile()?.uri == uri) prefs.clearLastFile()
+                // Файл удалён или доступ потерян — убираем его из недавних.
+                prefs.removeRecent(uri)
                 error = message
                 openUri = null
             },
         )
     }
+}
+
+private fun loadRecent(prefs: Prefs): List<RecentEntry> =
+    prefs.recentFiles().map { RecentEntry(it, prefs.page(it.uri)) }
+
+/** Отдаём системе постоянный доступ к файлу, который больше не нужен (у приложения есть лимит на их число). */
+private fun Context.releaseReadPermission(uri: Uri) {
+    runCatching { contentResolver.releasePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
 }
 
 fun Context.findActivity(): Activity {

@@ -130,7 +130,7 @@ fun ReaderScreen(uri: Uri, prefs: Prefs, onClose: () -> Unit, onError: (String) 
         try {
             val opened = PdfDoc.open(context, uri)
             doc = opened
-            prefs.setLastFile(uri, opened.name)
+            prefs.addRecent(RecentFile(uri, opened.name, opened.pageCount))
         } catch (e: CancellationException) {
             throw e
         } catch (e: SecurityException) {
