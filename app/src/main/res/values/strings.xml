@@ -14,6 +14,7 @@
     <string name="crop_margins">Crop margins</string>
     <string name="show_margins">Show margins</string>
     <string name="night_mode">Night mode</string>
+    <string name="share">Share</string>
     <string name="page_description">Page %1$d</string>
 
     <!-- Переход к странице -->

@@ -9,6 +9,7 @@
     <string name="crop_margins">Rogner les marges</string>
     <string name="show_margins">Afficher les marges</string>
     <string name="night_mode">Mode nuit</string>
+    <string name="share">Partager</string>
     <string name="page_description">Page %1$d</string>
     <string name="go_to_page_title">Aller à la page</string>
     <string name="go_to_page_confirm">OK</string>

@@ -9,6 +9,7 @@
     <string name="crop_margins">裁剪页边距</string>
     <string name="show_margins">显示页边距</string>
     <string name="night_mode">夜间模式</string>
+    <string name="share">分享</string>
     <string name="page_description">第 %1$d 页</string>
     <string name="go_to_page_title">跳转到页面</string>
     <string name="go_to_page_confirm">跳转</string>

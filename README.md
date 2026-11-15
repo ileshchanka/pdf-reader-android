@@ -3,7 +3,7 @@
 Минималистичный PDF-ридер: Kotlin + Jetpack Compose, рендер через встроенный `PdfRenderer` (без сторонних библиотек).
 
 ## Скачать
-**[Скачать APK (v1.0)](https://github.com/ileshchanka/pdf-reader-android/releases/download/v1.0/pdf-reader-1.0.apk)** · [все релизы](https://github.com/ileshchanka/pdf-reader-android/releases)
+**[Скачать APK (v1.1)](https://github.com/ileshchanka/pdf-reader-android/releases/download/v1.1/pdf-reader-1.1.apk)** · [все релизы](https://github.com/ileshchanka/pdf-reader-android/releases)
 
 Android 7.0+. APK подписан debug-ключом, поэтому при установке Android попросит разрешить установку из неизвестных источников.
 

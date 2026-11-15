@@ -1,5 +1,10 @@
 package com.example.pdfreader
 
+import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ContentResolver
+import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.view.WindowManager
 import androidx.activity.compose.BackHandler
@@ -44,6 +49,7 @@ import androidx.compose.material.icons.filled.Crop
 import androidx.compose.material.icons.filled.CropFree
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -171,6 +177,7 @@ private fun ReaderContent(doc: PdfDoc, uri: Uri, prefs: Prefs, onClose: () -> Un
     var fullscreen by rememberSaveable { mutableStateOf(false) }
     var nightMode by remember { mutableStateOf(prefs.nightMode) }
     var crop by remember { mutableStateOf(prefs.crop(uri)) }
+    val context = LocalContext.current
     LaunchedEffect(crop) { if (crop) doc.prepareCrop() }
     var zoom by rememberSaveable { mutableFloatStateOf(1f) }
     var showGoTo by remember { mutableStateOf(false) }
@@ -241,6 +248,12 @@ private fun ReaderContent(doc: PdfDoc, uri: Uri, prefs: Prefs, onClose: () -> Un
                     }
                 },
                 actions = {
+                    // file:// нельзя передавать другим приложениям (FileUriExposedException)
+                    if (uri.scheme == ContentResolver.SCHEME_CONTENT) {
+                        IconButton(onClick = { sharePdf(context, uri) }) {
+                            Icon(Icons.Filled.Share, contentDescription = stringResource(R.string.share))
+                        }
+                    }
                     IconButton(onClick = {
                         crop = !crop
                         prefs.setCrop(uri, crop)
@@ -568,4 +581,19 @@ private fun GoToPageDialog(pageCount: Int, onDismiss: () -> Unit, onGo: (Int) ->
         confirmButton = { TextButton(onClick = go, enabled = valid) { Text(stringResource(R.string.go_to_page_confirm)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
+}
+
+/** Отправляет исходный content:// URI с временным правом чтения для получателя. */
+private fun sharePdf(context: Context, uri: Uri) {
+    val send = Intent(Intent.ACTION_SEND).apply {
+        type = "application/pdf"
+        putExtra(Intent.EXTRA_STREAM, uri)
+        clipData = ClipData.newRawUri(null, uri)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    try {
+        context.startActivity(Intent.createChooser(send, context.getString(R.string.share)))
+    } catch (_: ActivityNotFoundException) {
+    } catch (_: SecurityException) {
+    }
 }

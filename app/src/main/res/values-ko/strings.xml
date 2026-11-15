@@ -9,6 +9,7 @@
     <string name="crop_margins">여백 자르기</string>
     <string name="show_margins">여백 표시</string>
     <string name="night_mode">야간 모드</string>
+    <string name="share">공유</string>
     <string name="page_description">%1$d페이지</string>
     <string name="go_to_page_title">페이지로 이동</string>
     <string name="go_to_page_confirm">이동</string>

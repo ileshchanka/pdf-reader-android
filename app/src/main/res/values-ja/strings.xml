@@ -9,6 +9,7 @@
     <string name="crop_margins">余白をトリミング</string>
     <string name="show_margins">余白を表示</string>
     <string name="night_mode">ナイトモード</string>
+    <string name="share">共有</string>
     <string name="page_description">%1$d ページ</string>
     <string name="go_to_page_title">ページへ移動</string>
     <string name="go_to_page_confirm">移動</string>

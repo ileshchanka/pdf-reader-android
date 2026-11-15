@@ -9,6 +9,7 @@
     <string name="crop_margins">裁剪頁邊</string>
     <string name="show_margins">顯示頁邊</string>
     <string name="night_mode">夜間模式</string>
+    <string name="share">分享</string>
     <string name="page_description">第 %1$d 頁</string>
     <string name="go_to_page_title">前往頁面</string>
     <string name="go_to_page_confirm">前往</string>

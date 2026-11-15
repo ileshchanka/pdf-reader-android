@@ -9,6 +9,7 @@
     <string name="crop_margins">Kenar boşluklarını kırp</string>
     <string name="show_margins">Kenar boşluklarını göster</string>
     <string name="night_mode">Gece modu</string>
+    <string name="share">Paylaş</string>
     <string name="page_description">Sayfa %1$d</string>
     <string name="go_to_page_title">Sayfaya git</string>
     <string name="go_to_page_confirm">Git</string>

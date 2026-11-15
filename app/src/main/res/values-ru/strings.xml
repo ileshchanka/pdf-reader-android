@@ -12,6 +12,7 @@
     <string name="crop_margins">Обрезать поля</string>
     <string name="show_margins">Показать поля</string>
     <string name="night_mode">Ночной режим</string>
+    <string name="share">Поделиться</string>
     <string name="page_description">Страница %1$d</string>
 
     <!-- Переход к странице -->
