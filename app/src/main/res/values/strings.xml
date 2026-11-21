@@ -12,9 +12,11 @@
     <!-- Ридер -->
     <string name="back">Back</string>
     <string name="crop_margins">Crop margins</string>
-    <string name="show_margins">Show margins</string>
     <string name="night_mode">Night mode</string>
     <string name="share">Share</string>
+    <string name="print">Print</string>
+    <string name="menu">Menu</string>
+    <string name="crop_progress">Detecting margins…</string>
     <string name="page_description">Page %1$d</string>
 
     <!-- Переход к странице -->

@@ -10,9 +10,11 @@
     <!-- Ридер -->
     <string name="back">Назад</string>
     <string name="crop_margins">Обрезать поля</string>
-    <string name="show_margins">Показать поля</string>
     <string name="night_mode">Ночной режим</string>
     <string name="share">Поделиться</string>
+    <string name="print">Печать</string>
+    <string name="menu">Меню</string>
+    <string name="crop_progress">Определение полей…</string>
     <string name="page_description">Страница %1$d</string>
 
     <!-- Переход к странице -->

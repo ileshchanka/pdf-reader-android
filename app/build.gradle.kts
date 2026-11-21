@@ -12,8 +12,8 @@ android {
         applicationId = "com.example.pdfreader"
         minSdk = 24
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.2"
         // Только языки, на которые переведён интерфейс (переводы библиотек на другие языки отбрасываются).
         resourceConfigurations += listOf(
             "en", "ru", "es", "pt", "fr", "de", "it", "pl", "uk", "tr",

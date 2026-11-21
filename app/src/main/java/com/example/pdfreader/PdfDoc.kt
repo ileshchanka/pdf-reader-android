@@ -8,10 +8,16 @@ import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.util.LruCache
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -130,14 +136,34 @@ class PdfDoc private constructor(
         }
     }
 
-    /** Считает общую область обрезки по выборке страниц. Повторные вызовы ничего не делают. */
-    suspend fun prepareCrop() = withContext(Dispatchers.IO) {
-        if (docCrop != null) return@withContext
+    /** Общая область обрезки уже посчитана. */
+    val cropReady: Boolean get() = docCrop != null
+
+    /** Доля обработанных страниц выборки при поиске полей (0..1), Compose-состояние. */
+    val cropProgress: Float get() = cropProgressState.floatValue
+    private val cropProgressState = mutableFloatStateOf(0f)
+
+    /** Фоновые задачи документа; отменяются при закрытии. */
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    /** Единственный расчёт области обрезки: стартует при первом вызовом [prepareCrop] и живёт до закрытия. */
+    private val cropJob: Deferred<Unit> by lazy { scope.async { computeCrop() } }
+
+    /**
+     * Запускает (если ещё не запущен) фоновый расчёт общей области обрезки и возвращает его.
+     * Отмена ожидающего не прерывает сам расчёт.
+     */
+    fun prepareCrop(): Deferred<Unit> = cropJob
+
+    /** Считает общую область обрезки по выборке страниц. */
+    private suspend fun computeCrop() {
         val sample = if (pageCount <= SAMPLE_SIZE) (0 until pageCount).toList()
         else List(SAMPLE_SIZE) { it * (pageCount - 1) / (SAMPLE_SIZE - 1) }
-        for (index in sample) {
+        for ((done, index) in sample.withIndex()) {
+            currentCoroutineContext().ensureActive()
+            cropProgressState.floatValue = done.toFloat() / sample.size
             mutex.withLock {
-                if (closed) return@withContext
+                if (closed) return
                 if (pageBounds[index] == null) {
                     val page = renderer.openPage(index)
                     try {
@@ -167,6 +193,7 @@ class PdfDoc private constructor(
         } else {
             arrayOf(all, all)
         }
+        cropProgressState.floatValue = 1f
         cropVersion.intValue++
     }
 
@@ -209,6 +236,7 @@ class PdfDoc private constructor(
 
     /** Закрывает документ, дождавшись окончания текущей отрисовки. */
     fun close() {
+        scope.cancel()
         closeScope.launch {
             mutex.withLock {
                 if (!closed) {

@@ -36,6 +36,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsIgnoringVisibility
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -45,13 +46,16 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Crop
-import androidx.compose.material.icons.filled.CropFree
 import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -87,6 +91,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -178,7 +183,19 @@ private fun ReaderContent(doc: PdfDoc, uri: Uri, prefs: Prefs, onClose: () -> Un
     var nightMode by remember { mutableStateOf(prefs.nightMode) }
     var crop by remember { mutableStateOf(prefs.crop(uri)) }
     val context = LocalContext.current
-    LaunchedEffect(crop) { if (crop) doc.prepareCrop() }
+    // Поля считаются в фоне сразу после открытия, чтобы обрезка включалась мгновенно.
+    LaunchedEffect(doc) { doc.prepareCrop() }
+    // Прогресс показываем, только если обрезку включили кнопкой, а расчёт ещё не закончен.
+    var showCropProgress by remember { mutableStateOf(false) }
+    LaunchedEffect(showCropProgress) {
+        if (showCropProgress) {
+            try {
+                doc.prepareCrop().await()
+            } finally {
+                showCropProgress = false
+            }
+        }
+    }
     var zoom by rememberSaveable { mutableFloatStateOf(1f) }
     var showGoTo by remember { mutableStateOf(false) }
     val listState = rememberLazyListState(
@@ -248,30 +265,23 @@ private fun ReaderContent(doc: PdfDoc, uri: Uri, prefs: Prefs, onClose: () -> Un
                     }
                 },
                 actions = {
-                    // file:// нельзя передавать другим приложениям (FileUriExposedException)
-                    if (uri.scheme == ContentResolver.SCHEME_CONTENT) {
-                        IconButton(onClick = { sharePdf(context, uri) }) {
-                            Icon(Icons.Filled.Share, contentDescription = stringResource(R.string.share))
-                        }
-                    }
-                    IconButton(onClick = {
-                        crop = !crop
-                        prefs.setCrop(uri, crop)
-                    }) {
-                        Icon(
-                            if (crop) Icons.Filled.CropFree else Icons.Filled.Crop,
-                            contentDescription = stringResource(if (crop) R.string.show_margins else R.string.crop_margins),
-                        )
-                    }
-                    IconButton(onClick = {
-                        nightMode = !nightMode
-                        prefs.nightMode = nightMode
-                    }) {
-                        Icon(
-                            if (nightMode) Icons.Filled.LightMode else Icons.Filled.DarkMode,
-                            contentDescription = stringResource(R.string.night_mode),
-                        )
-                    }
+                    ReaderMenu(
+                        // file:// нельзя передавать другим приложениям (FileUriExposedException)
+                        canShare = uri.scheme == ContentResolver.SCHEME_CONTENT,
+                        crop = crop,
+                        nightMode = nightMode,
+                        onShare = { sharePdf(context, uri) },
+                        onPrint = { printPdf(context, uri, doc.name, doc.pageCount) },
+                        onToggleCrop = {
+                            crop = !crop
+                            prefs.setCrop(uri, crop)
+                            showCropProgress = crop && !doc.cropReady
+                        },
+                        onToggleNightMode = {
+                            nightMode = !nightMode
+                            prefs.nightMode = nightMode
+                        },
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = PanelColor),
             )
@@ -308,6 +318,8 @@ private fun ReaderContent(doc: PdfDoc, uri: Uri, prefs: Prefs, onClose: () -> Un
                 )
             }
         }
+
+        if (showCropProgress) CropProgress(doc.cropProgress)
     }
 
     if (showGoTo) {
@@ -319,6 +331,67 @@ private fun ReaderContent(doc: PdfDoc, uri: Uri, prefs: Prefs, onClose: () -> Un
                 scope.launch { listState.scrollToItem(page) }
             },
         )
+    }
+}
+
+/** Бургер-меню ридера: все действия собраны в одном выпадающем списке. */
+@Composable
+private fun ReaderMenu(
+    canShare: Boolean,
+    crop: Boolean,
+    nightMode: Boolean,
+    onShare: () -> Unit,
+    onPrint: () -> Unit,
+    onToggleCrop: () -> Unit,
+    onToggleNightMode: () -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { expanded = true }) {
+            Icon(Icons.Filled.Menu, contentDescription = stringResource(R.string.menu))
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            @Composable
+            fun item(text: Int, icon: ImageVector, checked: Boolean?, onClick: () -> Unit) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(text)) },
+                    leadingIcon = { Icon(icon, contentDescription = null) },
+                    trailingIcon = if (checked == true) {
+                        { Icon(Icons.Filled.Check, contentDescription = null) }
+                    } else null,
+                    onClick = {
+                        expanded = false
+                        onClick()
+                    },
+                )
+            }
+            if (canShare) item(R.string.share, Icons.Filled.Share, null, onShare)
+            item(R.string.print, Icons.Filled.Print, null, onPrint)
+            item(R.string.crop_margins, Icons.Filled.Crop, crop, onToggleCrop)
+            item(R.string.night_mode, Icons.Filled.DarkMode, nightMode, onToggleNightMode)
+        }
+    }
+}
+
+/** Плашка по центру экрана, пока ищутся поля для обрезки. */
+@Composable
+private fun CropProgress(progress: Float) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        // PanelColor не из палитры темы, поэтому цвет текста задаём явно (иначе он чёрный по умолчанию).
+        Surface(color = PanelColor, contentColor = Color.White, shape = RoundedCornerShape(16.dp)) {
+            Row(
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                CircularProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier.size(28.dp),
+                    strokeWidth = 3.dp,
+                )
+                Text(stringResource(R.string.crop_progress), style = MaterialTheme.typography.bodyLarge)
+            }
+        }
     }
 }
 

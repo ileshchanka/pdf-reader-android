@@ -7,9 +7,11 @@
     <string name="remove_from_recent">Aus der Liste entfernen</string>
     <string name="back">Zurück</string>
     <string name="crop_margins">Ränder zuschneiden</string>
-    <string name="show_margins">Ränder anzeigen</string>
     <string name="night_mode">Nachtmodus</string>
     <string name="share">Teilen</string>
+    <string name="print">Drucken</string>
+    <string name="menu">Menü</string>
+    <string name="crop_progress">Ränder werden erkannt…</string>
     <string name="page_description">Seite %1$d</string>
     <string name="go_to_page_title">Gehe zu Seite</string>
     <string name="go_to_page_confirm">Los</string>

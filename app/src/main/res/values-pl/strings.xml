@@ -7,9 +7,11 @@
     <string name="remove_from_recent">Usuń z listy</string>
     <string name="back">Wstecz</string>
     <string name="crop_margins">Przytnij marginesy</string>
-    <string name="show_margins">Pokaż marginesy</string>
     <string name="night_mode">Tryb nocny</string>
     <string name="share">Udostępnij</string>
+    <string name="print">Drukuj</string>
+    <string name="menu">Menu</string>
+    <string name="crop_progress">Wykrywanie marginesów…</string>
     <string name="page_description">Strona %1$d</string>
     <string name="go_to_page_title">Przejdź do strony</string>
     <string name="go_to_page_confirm">Przejdź</string>

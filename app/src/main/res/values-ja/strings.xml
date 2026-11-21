@@ -7,9 +7,11 @@
     <string name="remove_from_recent">リストから削除</string>
     <string name="back">戻る</string>
     <string name="crop_margins">余白をトリミング</string>
-    <string name="show_margins">余白を表示</string>
     <string name="night_mode">ナイトモード</string>
     <string name="share">共有</string>
+    <string name="print">印刷</string>
+    <string name="menu">メニュー</string>
+    <string name="crop_progress">余白を検出中…</string>
     <string name="page_description">%1$d ページ</string>
     <string name="go_to_page_title">ページへ移動</string>
     <string name="go_to_page_confirm">移動</string>
